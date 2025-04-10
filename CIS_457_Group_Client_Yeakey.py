@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import simpledialog
+from tkinter import simpledialog, scrolledtext
 import threading
 import socket
 import queue
@@ -17,12 +17,13 @@ class App:
             master.destroy()
             return
 
-        self.message_list = []
-        self.label_list = []
         self.selfMessage = False
 
-        self.message_frame = tk.Frame(master)
-        self.message_frame.pack(fill="both", expand=True)
+        self.message_frame = scrolledtext.ScrolledText(master, wrap=tk.WORD, state='disabled', height=10)
+        self.message_frame.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
+        self.message_frame.tag_config("self_message", foreground="green")
+        self.message_frame.tag_config("not_self_message", foreground="black")
+
 
         self.input_box = tk.Text(master, height=2)#, width=30)
         self.input_box.pack()
@@ -59,21 +60,19 @@ class App:
                         break
                     self.data_queue.put(data.decode())
         except Exception as e:
-             self.data_queue.put(f"Error: {e}")
+            self.close()
 
     def update_gui(self):
         try:
             data = self.data_queue.get_nowait()
-            self.message_list.append(data)
-            message = tk.StringVar()
-            message.set(data)
+            self.message_frame.configure(state='normal')
             if (self.selfMessage):
-                label = tk.Label(self.message_frame, textvariable=message, anchor="w", justify="left", fg="green")
+                self.message_frame.insert(tk.END, data + "\n", "self_message")
                 self.selfMessage = False
             else:
-                label = tk.Label(self.message_frame, textvariable=message, anchor="w", justify="left")
-            label.pack(anchor="w")
-            self.label_list.append(message)
+                self.message_frame.insert(tk.END, data + "\n", "not_self_message")
+            self.message_frame.configure(state='disabled')
+            self.message_frame.see(tk.END)
         except queue.Empty:
             pass  # No data yet, ignore
         if self.running:
