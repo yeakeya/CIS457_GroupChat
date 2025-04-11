@@ -58,6 +58,9 @@ class App:
                     data = self.s.recv(1024)
                     if not data:
                         break
+                    print(data)
+                    if (data == b"<SERVER 5123> CLOSE PROGRAM"):
+                        self.close()
                     self.data_queue.put(data.decode())
         except Exception as e:
             self.close()

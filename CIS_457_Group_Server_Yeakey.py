@@ -20,19 +20,22 @@ def handleClient(socket, addr):
             socket.close()
 
 def main():
-    server_socket = socket(AF_INET, SOCK_STREAM)
-    server_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
-    server_socket.bind(("", 5123))
-    server_socket.listen(10)
+    try:
+        server_socket = socket(AF_INET, SOCK_STREAM)
+        server_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+        server_socket.bind(("", 5123))
+        server_socket.listen(10)
 
-    while True:#some_condition_to_check_here:
-        connection_socket, addr = server_socket.accept()
-        t = Thread(target = handleClient, args=(connection_socket, addr))
-        # Add client connection and start thread
-        connection_list.append(connection_socket)
-        t.start()
-
-    server_socket.close()
+        while True:#some_condition_to_check_here:
+            connection_socket, addr = server_socket.accept()
+            t = Thread(target = handleClient, args=(connection_socket, addr))
+            # Add client connection and start thread
+            connection_list.append(connection_socket)
+            t.start()
+    finally:
+        for connection in connection_list:
+            connection.sendall("<SERVER 5123> CLOSE PROGRAM".encode())
+            server_socket.close()
 
 if __name__ == "__main__":
     main()
